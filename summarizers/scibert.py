@@ -2,7 +2,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 """
-I'm using SPECTER which is a scientific model based on SciBERT.
+I'm using SciBERT which is a scientific model based on BERT.
 What it has learned during training = how to assign similar meanings(addresses) in the same neighborhood.
 """
 model  = SentenceTransformer("allenai-specter")
