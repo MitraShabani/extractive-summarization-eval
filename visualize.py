@@ -40,7 +40,7 @@ def average_entropy_plot(df):
         color= [METHOD_COLORS.get(m, "gray") for m in avg["method"]],
         yerr = std["entropy"], # error bars, standard deviation.
         edgecolor="black",
-        capsize=4,
+        capsize=3.5,
         # width= 0.6
     )
 
