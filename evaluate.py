@@ -65,8 +65,8 @@ def evaluate_methods(pdf_path):
         }
 
         results.append(row)
-        df=pd.DataFrame(summary)
-        df.to_csv(f"results/{method_name}.txt", index=False)
+        # df=pd.DataFrame(summary)
+        # df.to_csv(f"results/{method_name}.txt", index=False)
     return results
 
 if __name__ == "__main__":
