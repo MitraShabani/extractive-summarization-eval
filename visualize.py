@@ -17,7 +17,7 @@ def load_results(csv_path="results/evaluation.csv"):
     df = pd.read_csv(csv_path)
     return df
 
-# average entropy per method
+# 1: Bar chart — average entropy per method
 def average_entropy_plot(df):
     """ Plot average entropy for each method
     to Shows which method produces the most balanced section coverage on average """
@@ -58,8 +58,41 @@ def average_entropy_plot(df):
     plt.savefig(path)
     plt.close()
 
+# 2: Box plot — distribution of entropy values for each method
+def entropy_distribution_plot(df):
+    """ Box plot of entropy distribution for each method """
+
+    methods = sorted(df["method"].unique())
+    entropy_per_method = [df[df["method"] == m]["entropy"].values for m in methods]
+
+    fig, ax = plt.subplots()
+
+    ax.set_title("Distribution of Section Coverage Entropy Across Papers",
+                 pad=15)
+    ax.set_xlabel("Summarization Method",labelpad=10)
+    ax.set_ylabel("Entropy",labelpad=10)
+    ax.set_xticklabels([m.upper() for m in methods])
+
+    boxplot = ax.boxplot(
+        entropy_per_method,
+        patch_artist=True,  # to color the boxes
+        notch=False,  # straight edges (True = pinched middle)
+        widths=0.5,
+    )
+
+    for patch, method in zip(boxplot["boxes"], methods):
+        patch.set_facecolor(METHOD_COLORS.get(method, "gray"))
+        patch.set_alpha(0.7)
+
+    path = os.path.join(OUTPUT_DIR, "entropy_distribution_boxplot.png")
+    plt.savefig(path)
+    plt.close()
+
+
+
 if __name__ == "__main__":
     df = load_results("results/evaluation.csv")
 
     print("Generating visualizations...")
     average_entropy_plot(df)
+    entropy_distribution_plot(df)
