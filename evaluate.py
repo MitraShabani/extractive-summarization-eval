@@ -43,6 +43,45 @@ def section_entropy(summary):
 
     return entropy  # now always between 0 and 1
 
+def kl_divergence(summary, data):
+    """ Measures how much the summary's section distribution diverges
+    from the original paper's section distribution.
+    Lower KL divergence = better coverage of original structure
+    """
+    # step 1: count sentences per section in the ORIGINAL paper
+    original_counts = {}
+    for item in data:
+        header = item["header"] or "No Header"
+        original_counts[header] = original_counts.get(header, 0) + 1 # header is the key, count is the value
+
+    # step 2: count sentences per section in the SUMMARY
+    summary_counts = {}
+    for item in summary:
+        header = item["header"] or "No Header"
+        summary_counts[header] = summary_counts.get(header, 0) + 1
+
+    # step 3: compute KL divergence
+    # KL(actual || expected) = sum of actual * log(actual / expected)
+    kl_div = 0
+    for header, original_count  in original_counts.items():
+
+            """ Section in paper, ignored by summary -> actual =0 -> log(0) is undefined
+            in this case we can act proportional to how important the section was in the paper
+            a large section being ignored = larger penalty
+            """
+            # how much this section contributes to summary
+            actual = summary_counts.get(header, 0) / sum(summary_counts.values())
+            # how much this section occupies in the paper
+            expected = original_count / sum(original_counts.values())
+
+            if actual > 0 :
+                kl_div += actual * math.log(actual / expected)
+            else:
+                kl_div += expected  # += expected for ignored sections
+
+    return kl_div
+
+
 
 def evaluate_methods(pdf_path):
     doc, pages = extract_blocks(pdf_path)
@@ -57,16 +96,17 @@ def evaluate_methods(pdf_path):
         summary = summarizer(data)
         coverage = section_coverage(summary)
         entropy = section_entropy(summary)
+        kl = kl_divergence(summary, data)
         row = {
             "paper": os.path.basename(pdf_path),
             "method": method_name,
             "section_count": len(coverage),
             "entropy": entropy,
+            "kl_divergence ": kl
         }
 
         results.append(row)
-        # df=pd.DataFrame(summary)
-        # df.to_csv(f"results/{method_name}.txt", index=False)
+
     return results
 
 if __name__ == "__main__":

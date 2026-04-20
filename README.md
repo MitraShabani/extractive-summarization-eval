@@ -12,7 +12,9 @@
 | SciBERT | Semantic | Yes             |
 
 ## Evaluation Metrics
+- (NOT ROUGE — reasons: abstract bias, word overlap limitations)
 - **Entropy** — measures balance of section coverage
+- **KL Divergence** — measures how well summary respect the paper's own structure
 
 ## Key Design Decisions
 - Used SciBERT over SPECTER: SPECTER is document-level,
