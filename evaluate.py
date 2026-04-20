@@ -102,7 +102,7 @@ def evaluate_methods(pdf_path):
             "method": method_name,
             "section_count": len(coverage),
             "entropy": entropy,
-            "kl_divergence ": kl
+            "kl_divergence": kl
         }
 
         results.append(row)
