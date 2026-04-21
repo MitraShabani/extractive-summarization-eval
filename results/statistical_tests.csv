@@ -1,0 +1,7 @@
+metric,method_a,method_b,mean_a,mean_b,statistic,p_value,significance,better_method
+entropy,scibert,tfidf,0.7017,0.7996,164.0,0.0,strongly significant,tfidf
+entropy,scibert,sbert,0.7017,0.7704,136.0,0.0,strongly significant,sbert
+entropy,sbert,tfidf,0.7704,0.7996,408.0,0.0262,significant,tfidf
+kl_divergence,scibert,tfidf,0.1804,0.2316,343.0,0.0039,strongly significant,scibert
+kl_divergence,scibert,sbert,0.1804,0.2259,300.0,0.0019,strongly significant,scibert
+kl_divergence,sbert,tfidf,0.2259,0.2316,596.0,0.6947,not significant,sbert
