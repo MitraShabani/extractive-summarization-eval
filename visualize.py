@@ -182,18 +182,30 @@ def combined_metrics_plot(df):
     x = np.arange(len(methods))  # We divide a given interval equally between the number of methods. [0,1,2]
     width = 0.40  # how wide each bar is
 
+
+    # first y-axis for entropy (left side)
+    ax.set_ylabel("Entropy (↑ higher is better)", color="orange", labelpad=10)
+    ax.tick_params(axis='y', labelcolor="orange")
+
+    # create second y-axis for KL divergence (right side)
+    ax2 = ax.twinx()
+    ax2.set_ylabel("KL Divergence (↓ lower is better)", color="cornflowerblue", labelpad=10)
+    ax2.tick_params(axis='y', labelcolor="cornflowerblue")
+
     # we need both bars for each method
-    bars = [
-        ax.bar( x = x - width/2, height = entropy_values, width = width, color = "orange" ,label="Entropy"), # entropy bars — shifted LEFT of center
-        ax.bar( x = x + width/2, height = kl_values, width = width, color = "cornflowerblue" ,label="KL Divergence") # kl bars — shifted RIGHT of center
-    ]
+    bar1= ax.bar( x = x - width/2, height = entropy_values, width = width, color = "orange" ,label="Entropy"), # entropy bars — shifted LEFT of center
+    bar2= ax2.bar( x = x + width/2, height = kl_values, width = width, color = "cornflowerblue" ,label="KL Divergence") # kl bars — shifted RIGHT of center
 
     ax.set_title("Entropy and KL Divergence by Summarization Methods", pad=20)
     ax.set_xticks(x)  # where to put tick marks
     ax.set_xticklabels(methods)  # replace the numeric value with actual names
-    ax.legend()  # legend box
+
+    lines = [bar1, bar2]
+    labels = ["Entropy (↑)", "KL Divergence (↓)"]
+    ax.legend(lines, labels, loc="upper center")  # legend box
 
     path = os.path.join(OUTPUT_DIR, "combined_metrics.png")
+    plt.tight_layout()
     plt.savefig(path)
     plt.close()
     print(f"Saved: {path}")
