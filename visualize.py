@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 
 METHOD_COLORS = {
@@ -14,6 +15,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def load_results(csv_path="results/evaluation.csv"):
     df = pd.read_csv(csv_path)
+    df.columns = df.columns.str.strip()
     return df
 
 # 1: Bar chart — average entropy per method
@@ -163,6 +165,40 @@ def plot_kl_boxplot(df):
     plt.close()
     print(f"Saved: {path}")
 
+def combined_metrics_plot(df):
+    """ finall """
+
+    # method is the index, to change it to a regular column we should reset_index
+    avg_entropy  = df.groupby("method")["entropy"].mean().reset_index()
+    avg_kl  = df.groupby("method")["kl_divergence"].mean().reset_index()
+
+    methods = [m.upper() for m in avg_entropy["method"]]
+    entropy_values = avg_entropy["entropy"].values
+    kl_values = avg_kl["kl_divergence"].values
+
+    # Create the figure and axis
+    fig, ax = plt.subplots()
+
+    x = np.arange(len(methods))  # We divide a given interval equally between the number of methods. [0,1,2]
+    width = 0.40  # how wide each bar is
+
+    # we need both bars for each method
+    bars = [
+        ax.bar( x = x - width/2, height = entropy_values, width = width, color = "orange" ,label="Entropy"), # entropy bars — shifted LEFT of center
+        ax.bar( x = x + width/2, height = kl_values, width = width, color = "cornflowerblue" ,label="KL Divergence") # kl bars — shifted RIGHT of center
+    ]
+
+    ax.set_title("Entropy and KL Divergence by Summarization Methods", pad=20)
+    ax.set_xticks(x)  # where to put tick marks
+    ax.set_xticklabels(methods)  # replace the numeric value with actual names
+    ax.legend()  # legend box
+
+    path = os.path.join(OUTPUT_DIR, "combined_metrics.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"Saved: {path}")
+
+
 
 if __name__ == "__main__":
     df = load_results("results/evaluation.csv")
@@ -172,3 +208,4 @@ if __name__ == "__main__":
     entropy_distribution_plot(df)
     plot_average_kl(df)
     plot_kl_boxplot(df)
+    combined_metrics_plot(df)
