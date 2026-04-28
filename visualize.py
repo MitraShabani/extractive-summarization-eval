@@ -165,8 +165,12 @@ def plot_kl_boxplot(df):
     plt.close()
     print(f"Saved: {path}")
 
-def combined_metrics_plot(df):
-    """ finall """
+def combined_metrics_plot(df, results_df):
+
+    """ Shows entropy and KL divergence metrics side by side per method.
+        and also we wanna answer that 'Are the differences reader sees in the plot statistically real?',
+        by presenting the statistical test datain a table.
+    """
 
     # method is the index, to change it to a regular column we should reset_index
     avg_entropy  = df.groupby("method")["entropy"].mean().reset_index()
@@ -177,32 +181,94 @@ def combined_metrics_plot(df):
     kl_values = avg_kl["kl_divergence"].values
 
     # Create the figure and axis
-    fig, ax = plt.subplots()
+    fig, (ax_plot, ax_table) = plt.subplots(2,1,figsize=(8, 10))  # 2 row and 1 columns
+
+
+    " First panel: plot"
 
     x = np.arange(len(methods))  # We divide a given interval equally between the number of methods. [0,1,2]
     width = 0.40  # how wide each bar is
 
-
     # first y-axis for entropy (left side)
-    ax.set_ylabel("Entropy (↑ higher is better)", color="orange", labelpad=10)
-    ax.tick_params(axis='y', labelcolor="orange")
+    ax_plot.set_ylabel("Entropy (↑ higher is better)", color="orange", labelpad=10)
+    ax_plot.tick_params(axis='y', labelcolor="orange")
 
     # create second y-axis for KL divergence (right side)
-    ax2 = ax.twinx()
+    ax2 = ax_plot.twinx()
     ax2.set_ylabel("KL Divergence (↓ lower is better)", color="cornflowerblue", labelpad=10)
     ax2.tick_params(axis='y', labelcolor="cornflowerblue")
 
     # we need both bars for each method
-    bar1= ax.bar( x = x - width/2, height = entropy_values, width = width, color = "orange" ,label="Entropy"), # entropy bars — shifted LEFT of center
+    bar1= ax_plot.bar( x = x - width/2, height = entropy_values, width = width, color = "orange" ,label="Entropy"), # entropy bars — shifted LEFT of center
     bar2= ax2.bar( x = x + width/2, height = kl_values, width = width, color = "cornflowerblue" ,label="KL Divergence") # kl bars — shifted RIGHT of center
 
-    ax.set_title("Entropy and KL Divergence by Summarization Methods", pad=20)
-    ax.set_xticks(x)  # where to put tick marks
-    ax.set_xticklabels(methods)  # replace the numeric value with actual names
+    ax_plot.set_xticks(x)  # where to put tick marks
+    ax_plot.set_xticklabels(methods)  # replace the numeric value with actual names
+    ax_plot.set_title("Entropy and KL Divergence by Summarization Methods", y=-0.25, pad=20)
 
     lines = [bar1, bar2]
     labels = ["Entropy (↑)", "KL Divergence (↓)"]
-    ax.legend(lines, labels, loc="upper center")  # legend box
+    ax_plot.legend(lines, labels, loc="upper center")  # legend box
+
+
+    """ Second panel: table"""
+
+    # function to convert p-value to stars automatically
+    def get_stars(p_value):
+        if p_value < 0.001:
+            return "***"
+        elif p_value < 0.01:
+            return "**"
+        elif p_value < 0.05:
+            return "*"
+        else:
+            return "n.s."
+
+    data_table = []
+
+    for index,row in results_df.iterrows():
+
+        extracted_row = []
+        methods = f"{row['method_a']} vs {row['method_b']}"
+
+        extracted_row.append(methods)
+        extracted_row.append(row["metric"])
+        extracted_row.append(f"{row['p_value']:.4f}")
+        extracted_row.append(get_stars(row["p_value"]))
+
+        data_table.append(extracted_row)
+
+    table = ax_table.table(
+    colLabels = ["Comparison", "Metric", "p-value", "Significance"],
+    cellText = data_table,
+    cellLoc="center",
+    loc ="center"
+    )
+
+
+    """ Customize table appearance"""
+
+    table.scale(1, 1.5)
+    for col in range(4):
+        table[0, col].set_facecolor("#2C3E50")
+        table[0, col].set_text_props(color="white", fontweight="bold")
+
+    # color significance column based on value
+    for row in range(1, len(data_table) + 1):
+        stars = data_table[row-1][3]
+        if stars == "n.s.":
+            table[row, 3].set_facecolor("#ffcccc")
+        else:
+            table[row, 3].set_facecolor("#ccffcc")
+
+    ax_table.axis('off')
+    ax_table.annotate("** p < 0.01, * p < 0.05, n.s. = not significant",
+            xy=(0.5, 0.15),
+            xycoords='axes fraction',
+            ha='center',
+            fontsize=9,
+            style='italic')
+
 
     path = os.path.join(OUTPUT_DIR, "combined_metrics.png")
     plt.tight_layout()
@@ -214,10 +280,11 @@ def combined_metrics_plot(df):
 
 if __name__ == "__main__":
     df = load_results("results/evaluation.csv")
+    results_df = pd.read_csv("results/statistical_tests.csv")
 
     print("Generating visualizations...")
     average_entropy_plot(df)
     entropy_distribution_plot(df)
     plot_average_kl(df)
     plot_kl_boxplot(df)
-    combined_metrics_plot(df)
+    combined_metrics_plot(df, results_df)
